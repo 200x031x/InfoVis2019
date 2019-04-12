@@ -1,0 +1,55 @@
+
+<html>
+	<head>
+		<title>ffff</title>
+	</head>
+	<body>
+		<script>
+			function Vec3(x,y,z)
+			{
+				this.x=x;
+				this.y=y;
+				this.z=z;
+
+			}
+
+			Vec3.prototype.max = function () {
+  					var max=0
+  					if(this.x>this.y)
+  						max=this.x
+  					else
+  						max=this.y
+  					if(max>this.z)
+  						return max
+  					else
+  						return this.z
+				};
+			Vec3.prototype.min = function () {
+  					var min=0
+  					if(this.x>this.y)
+  						min=this.y
+  					else
+  						min=this.x
+  					if(min<this.z)
+  						return min
+  					else
+  						return this.z
+				};
+			Vec3.prototype.mid = function () {
+  				 return this.x > this.y ? (this.y > this.z ? this.y : ( this.x > this.z ? this.z : this.x)) : ( this.x > this.z ? this.x: (this.b > this.z ? this.z : this.x));
+
+				};
+
+			var v = new Vec3(5, 4,8);
+			max = v.max();
+			min = v.min();
+			mid = v.mid();
+			document.write("max:"+max," min:"+min," mid:"+mid)
+			
+		</script>
+	</body>
+</html>
+
+
+
+
