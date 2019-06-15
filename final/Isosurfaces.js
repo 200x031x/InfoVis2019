@@ -1,7 +1,43 @@
-function Isosurfaces( volume, isovalue )
+function Isosurfaces( volume, isovalue, screen ,reflection,interpolate)
 {
     var geometry = new THREE.Geometry();
-    var material = new THREE.MeshLambertMaterial();
+    //var material = new THREE.MeshLambertMaterial();
+    // Create color map
+    var cmap = [];
+    for ( var i = 0; i < 256; i++ )
+    {
+        var S = i / 255.0; // [0,1]
+        var R = Math.max( Math.cos( ( S - 1.0 ) * Math.PI ), 0.0 );
+        var G = Math.max( Math.cos( ( S - 0.5 ) * Math.PI ), 0.0 );
+        var B = Math.max( Math.cos( S * Math.PI ), 0.0 );
+        var color = new THREE.Color( R, G, B );
+        cmap.push( [ S, '0x' + color.getHexString() ] );
+    }
+
+    var materialcolor = new THREE.Color().setHex( cmap[isovalue][1] );
+    var material = new THREE.ShaderMaterial({
+    vertexColors: THREE.VertexColors,
+      vertexShader: document.getElementById('phong.vert').text,
+      fragmentShader: document.getElementById('phong.frag').text,
+    uniforms:{
+      light_position: { type : 'v3', value: screen.light.position },
+      camera_position:{ type: 'v3',value: screen.camera.position },
+      material_color: { type : 'v3', value: materialcolor}
+    }});
+    if(reflection=="Lambertian"){
+      var material = new THREE.ShaderMaterial({
+      vertexColors: THREE.VertexColors,
+        vertexShader: document.getElementById('Lambertian.vert').text,
+        fragmentShader: document.getElementById('Lambertian.frag').text,
+      uniforms:{
+        light_position: { type : 'v3', value: screen.light.position },
+        camera_position:{ type: 'v3',value: screen.camera.position },
+        material_color: { type : 'v3', value: materialcolor}
+      }});
+    }
+
+
+
 
     var smin = volume.min_value;
     var smax = volume.max_value;
@@ -25,7 +61,7 @@ function Isosurfaces( volume, isovalue )
                 {
                     var eid0 = lut.edgeID[index][j];
                     var eid1 = lut.edgeID[index][j+2];
-                    var eid2 = lut.edgeID[index][j + 1];
+                    var eid2 = lut.edgeID[index][j+1];
 
                     var vid0 = lut.vertexID[eid0][0];
                     var vid1 = lut.vertexID[eid0][1];
@@ -34,23 +70,22 @@ function Isosurfaces( volume, isovalue )
                     var vid4 = lut.vertexID[eid2][0];
                     var vid5 = lut.vertexID[eid2][1];
 
-                    var id0 = indices[index_of(eid0)[0]];
-                    var id1 = indices[index_of(eid0)[1]];
-                    var id2 = indices[index_of(eid1)[0]];
-                    var id3 = indices[index_of(eid1)[1]];
-                    var id4 = indices[index_of(eid2)[0]];
-                    var id5 = indices[index_of(eid2)[1]];
-
                     var v0 = new THREE.Vector3( x + vid0[0], y + vid0[1], z + vid0[2] );
                     var v1 = new THREE.Vector3( x + vid1[0], y + vid1[1], z + vid1[2] );
                     var v2 = new THREE.Vector3( x + vid2[0], y + vid2[1], z + vid2[2] );
                     var v3 = new THREE.Vector3( x + vid3[0], y + vid3[1], z + vid3[2] );
                     var v4 = new THREE.Vector3( x + vid4[0], y + vid4[1], z + vid4[2] );
                     var v5 = new THREE.Vector3( x + vid5[0], y + vid5[1], z + vid5[2] );
-                    
-                    var v01 = interpolated_vertex( v0, v1, id0, id1, isovalue );
-                    var v23 = interpolated_vertex( v2, v3, id2, id3, isovalue );
-                    var v45 = interpolated_vertex( v4, v5, id4, id5, isovalue );
+
+                    if(interpolate=="Interpolated"){
+                    var v01 = interpolated_vertex( v0, v1, isovalue );
+                    var v23 = interpolated_vertex( v2, v3, isovalue );
+                    var v45 = interpolated_vertex( v4, v5, isovalue );
+                  }else{
+                    var v01 = vertex( v0, v1, isovalue );
+                    var v23 = vertex( v2, v3, isovalue );
+                    var v45 = vertex( v4, v5, isovalue );
+                  }
 
                     geometry.vertices.push( v01 );
                     geometry.vertices.push( v23 );
@@ -69,15 +104,9 @@ function Isosurfaces( volume, isovalue )
 
     geometry.computeVertexNormals();
 
-    //material.color = new THREE.Color( "white" );
-    var S = isovalue / 255.0; // [0,1]
-    var R = Math.max( Math.cos( ( S - 1.0 ) * Math.PI ), 0.0 );
-    var G = Math.max( Math.cos( ( S - 0.5 ) * Math.PI ), 0.0 );
-    var B = Math.max( Math.cos( S * Math.PI ), 0.0 );
-    
-    material.color = new THREE.Color( R, G, B );
-     
 
+
+    material.color = materialcolor;
     return new THREE.Mesh( geometry, material );
 
 
@@ -122,72 +151,23 @@ function Isosurfaces( volume, isovalue )
         return index;
     }
 
-    function index_of(eid)
+
+    function interpolated_vertex( v0, v1, s )
     {
-        var vid = new Array()
-        if (eid == 0) {
-            vid.push(0);
-            vid.push(1)
-        }
-        if (eid == 1) {
-            vid.push(1);
-            vid.push(2)
-        }
-        if (eid == 2) {
-            vid.push(2);
-            vid.push(3)
-        }
-        if (eid == 3) {
-            vid.push(3);
-            vid.push(0)
-        }
-        if (eid == 4) {
-            vid.push(4);
-            vid.push(5)
-        }
-        if (eid == 5) {
-            vid.push(5);
-            vid.push(6)
-        }
-        if (eid == 6) {
-            vid.push(6);
-            vid.push(7)
-        }
-        if (eid == 7) {
-            vid.push(7);
-            vid.push(4)
-        }
-        if (eid == 8) {
-            vid.push(0);
-            vid.push(4)
-        }
-        if (eid == 9) {
-            vid.push(1);
-            vid.push(5)
-        }
-        if (eid == 10) {
-            vid.push(2);
-            vid.push(6)
-        }
-        if (eid == 11) {
-            vid.push(3);
-            vid.push(7)
-        }
-            
-        return vid;
+        var i0 = v0.x + (v0.y* volume.resolution.x) + (v0.z*volume.resolution.x * volume.resolution.y);
+        var i1 = v1.x + (v1.y* volume.resolution.x) + (v1.z*volume.resolution.x * volume.resolution.y);
+
+        var s0 = volume.values[i0][0];
+        var s1 = volume.values[i1][0];
+
+        var t = (s-s0)/(s1-s0);
+
+        return new THREE.Vector3().addVectors(v0.multiplyScalar(1-t),v1.multiplyScalar(t));
+    }
+    function vertex( v0, v1, s )
+    {
+        return new THREE.Vector3().addVectors( v0, v1 ).divideScalar( 2 );
     }
 
-    function interpolated_vertex( v0, v1, id0, id1, s )
-    {
-        //return new THREE.Vector3().addVectors( v0, v1 ).divideScalar( 2 );
-        
-        
-        var a = Math.abs(volume.values[ id0 ][0] - s);
-        var b = Math.abs(volume.values[ id1 ][0] - s);
-        
-        var vec0 = v0.multiplyScalar(b);
-        var vec1 = v1.multiplyScalar(a);
-        return new THREE.Vector3().addVectors(vec0, vec1).divideScalar(a + b);
-        
-    }
+
 }
