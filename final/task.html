@@ -1,0 +1,41 @@
+<html>
+    <head>
+	<title>Final Task</title>
+    </head>
+    <body style="margin:0">
+    <div id="display" style="width: 80%; float: left;"></div>
+    <div id="controller" style="width:20%; float:left;">
+    <label id="label" style="font-family:Arial;"></label>
+    
+    <font  color="black">
+        <h2>Information Visualization 2019　Final</h2>
+        <h2>191x124x 庄　緯豪</h2><br>
+        <td align="left">
+    <p>   
+       Over Isosurface Extraction describes the lobster data. 
+Lobsters are colored with colors corresponding to isovalue on the rainbow color map. <;br>; 
+
+In addition, a slider is arranged on the left screen. 
+You can change the isovalue by moving the curve ball. Range from 0 to 256 and set 128 by deafult. 
+By moving the slider, changing the isovalue, can change the shape and color of the lobster.<br>
+
+
+    </p>
+    <div><b><font color="green" size="14">Isovalue :</font></b></div>
+    <input type="range" min="0" max="256" step="1" value="128"
+    id="isovalue"/>
+
+    </body> 
+	<script src="three.min.js"></script>
+	<script src="TrackballControls.js"></script>
+	<script src="http://threejs.org/examples/js/math/Lut.js"></script>
+	<script src="http://naohisas.github.io/KVS.js/Build/KVS.min.js"></script>
+	<script src="http://naohisas.github.io/KVS.js/Build/KVS2THREE.min.js"></script>
+	<script src="http://naohisas.github.io/KVS.js/Source/KVSLobsterData.js"></script>
+	<script src="Bounds.js"></script>
+	<script src="Isosurfaces.js"></script>
+	<script src="main.js"></script>
+	<script>
+	 main();
+    </script>
+</html>
